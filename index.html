@@ -15,13 +15,26 @@
 <body>
     
     
+<audio autoplay loop>
+       <source src="assets/PacMan Original Theme.mp3" type="audio/mp3">
+</audio>
+ 
+    
     <script type="text/javascript">
 
     var game = new Phaser.Game(448, 496, Phaser.AUTO);
 
     var Pacman = function (game) {
-
         
+        this.score=0;
+        this.scoreText='';
+        
+        this.bonus=0;
+        this.bonusText='';
+        
+        this.lives=3;
+        this.livesText='';
+    
         this.map = null;
         this.layer = null;
         this.pacman = null;
@@ -65,6 +78,7 @@
             this.load.crossOrigin = 'anonymous';
 
             this.load.image('dot', 'assets/dot.png');
+            this.load.image('dot2', 'assets/dot2.png');
             this.load.image('tiles', 'assets/pacman-tiles.png');
             this.load.spritesheet('pacman', 'assets/pacman.png', 32, 32);
             this.load.tilemap('map', 'assets/pacman-map1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -81,14 +95,17 @@
             this.layer = this.map.createLayer('Pacman');
 
             this.dots = this.add.physicsGroup();
-           
+            this.dots2 = this.add.physicsGroup();
 
             this.map.createFromTiles(7, this.safetile, 'dot', this.layer, this.dots);
-        
+            this.map.createFromTiles(35, this.safetile, 'dot2', this.layer, this.dots2);
 
             //  The dots will need to be offset by 6px to put them back in the middle of the grid
             this.dots.setAll('x', 6, false, false, 1);
             this.dots.setAll('y', 6, false, false, 1);
+            
+            this.dots2.setAll('x', 6, false, false, 1);
+            this.dots2.setAll('y', 6, false, false, 1);
          
 
             //  Pacman should collide with everything except the safe tile
@@ -107,6 +124,11 @@
             this.pacman.play('munch');
             this.move(Phaser.LEFT);
             
+            this.scoreText= game.add.text(10, 0, 'Score:0', { fontSize: '20px Verdana', fill: '#FFFFFF' });
+            
+            this.bonusText= game.add.text(180, 0, 'Bonus:0', { fontSize: '20px Verdana', fill: '#FFFFFF' });
+            
+            this.livesText= game.add.text(350, 0, 'Lives:3', { fontSize: '20px Verdana', fill: '#FFFFFF' });
             
         },
 
@@ -226,7 +248,14 @@
 
         eatDot: function (pacman, dot) {
           
-      
+            var audio = new Audio('assets/Super Mario Bros.-Coin Sound Effect.mp3');
+            audio.play()
+            
+            this.score+=10;
+            this.scoreText.text= 'Score: ' + this.score;
+            
+            
+            
 
             dot.kill();
 
@@ -237,6 +266,27 @@
 
         },
         
+         eatDot2: function (pacman, dot2) {
+          
+            var audio = new Audio('assets/Super Mario Bros.- Jump Sound Effect.mp3');
+            audio.play()
+            
+            this.score+=50;
+            this.bonus+=50;
+            this.scoreText.text= 'Score: ' + this.score;
+            this.bonusText.text= 'Bonus: ' +this.bonus;
+            
+            
+            
+
+            dot2.kill();
+
+            if (this.dots.total === 0)
+            {
+                this.dots.callAll('revive');
+            }
+
+        },
         
 
 
@@ -245,6 +295,8 @@
             this.physics.arcade.collide(this.pacman, this.layer);
             this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
            
+            this.physics.arcade.overlap(this.pacman, this.dots2, this.eatDot2, null, this);
+            
             this.marker.x = this.math.snapToFloor(Math.floor(this.pacman.x), this.gridsize) / this.gridsize;
             this.marker.y = this.math.snapToFloor(Math.floor(this.pacman.y), this.gridsize) / this.gridsize;
 
